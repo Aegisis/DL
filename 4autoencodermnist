@@ -1,0 +1,45 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+(X_train, _), (X_test, _) = tf.keras.datasets.mnist.load_data()
+X_train = X_train.astype('float32') / 255.0
+X_test = X_test.astype('float32') / 255.0
+
+encoder = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=[28, 28]),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dense(32, activation="relu"),
+])
+
+decoder = tf.keras.Sequential([
+    tf.keras.layers.Dense(64, activation="relu", input_shape=[32]),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(28 * 28, activation="sigmoid"),
+    tf.keras.layers.Reshape([28, 28])
+])
+
+autoencoder = tf.keras.Sequential([encoder, decoder])
+autoencoder.compile(loss="binary_crossentropy", optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
+autoencoder.fit(X_train, X_train, epochs=10, batch_size=128, validation_data=(X_test, X_test))
+
+decoded_imgs = autoencoder.predict(X_test)
+
+n = 10
+plt.figure(figsize=(20, 4))
+for i in range(n):
+    # Original images
+    ax = plt.subplot(2, n, i + 1)
+    plt.imshow(X_test[i])
+    plt.gray()
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    # Reconstructed images
+    ax = plt.subplot(2, n, i + 1 + n)
+    plt.imshow(decoded_imgs[i])
+    plt.gray()
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+plt.show()
